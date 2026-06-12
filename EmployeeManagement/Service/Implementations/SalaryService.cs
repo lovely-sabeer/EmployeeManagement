@@ -20,6 +20,7 @@ namespace EmployeeManagement.Service.Implementations
         public async Task<CommonPaginatedResponse<SalaryDto>> GetSalaryListAsync(string? search,string? department,int month,int year,int page,int pageSize)
         {
             var query = _context.Employees
+                .Include(i => i.Payments)
                 .AsNoTracking()
                 .Where(x => !x.IsDeleted);
 
@@ -31,7 +32,7 @@ namespace EmployeeManagement.Service.Implementations
                     x.EmployeeId.Contains(search));
             }
 
-            if (!string.IsNullOrWhiteSpace(department) && department != "All Departments")
+            if (!string.IsNullOrWhiteSpace(department) && department != "all")
             {
                 query = query.Where(x => x.Department.ToString() == department);
             }
@@ -47,9 +48,8 @@ namespace EmployeeManagement.Service.Implementations
 
             foreach (var employee in employees)
             {
-                var payment = await _context.Payments
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x =>
+                var payment = employee.Payments
+                    .FirstOrDefault(x =>
                         x.EmployeeId == employee.Id &&
                         x.PaymentDate.Month == month &&
                         x.PaymentDate.Year == year);
@@ -73,13 +73,13 @@ namespace EmployeeManagement.Service.Implementations
 
                 result.Add(new SalaryDto
                 {
-                    EmployeeId = employee.Id,
-                    EmployeeCode = employee.EmployeeId,
+                    Id = employee.Id,
+                    EmployeeId = employee.EmployeeId,
                     EmployeeName = $"{employee.FirstName} {employee.LastName}",
                     Department = employee.Department.ToString(),
                     Amount = finalSalary,
-                    PaidDate = payment?.PaymentDate,
-                    Status = payment?.Status ?? PaymentStatus.Unpaid
+                    PaidDate = payment?.PaymentDate.ToString("yyyy-MM-dd"),
+                    Status = (payment?.Status ?? PaymentStatus.Unpaid).ToString()
                 });
             }
 
@@ -101,8 +101,8 @@ namespace EmployeeManagement.Service.Implementations
                 bool alreadyExists = await _context.Payments
                     .AnyAsync(x =>
                         x.EmployeeId == employeeId &&
-                        x.PaymentDate.Month == req.PaymentDate.Month &&
-                        x.PaymentDate.Year == req.PaymentDate.Year);
+                        x.PaymentDate.Month == DateTime.Now.Month &&
+                        x.PaymentDate.Year == DateTime.Now.Year);
 
                 if (alreadyExists)
                     continue;
@@ -114,7 +114,7 @@ namespace EmployeeManagement.Service.Implementations
                     continue;
 
                 var previousMonth =
-                    req.PaymentDate.AddMonths(-1);
+                    DateTime.Now.AddMonths(-1);
 
                 var leaveDays = await _context.Attendences
                     .CountAsync(x =>
@@ -133,9 +133,8 @@ namespace EmployeeManagement.Service.Implementations
                 {
                     EmployeeId = employeeId,
                     Amount = finalSalary,
-                    PaymentDate = req.PaymentDate,
+                    PaymentDate = DateTime.Now,
                     Status = req.Status,
-                    CreatedAt = DateTime.UtcNow
                 });
             }
 
@@ -159,7 +158,6 @@ namespace EmployeeManagement.Service.Implementations
 
             var exportData = data.Data.Select(x => new
             {
-                x.EmployeeCode,
                 x.EmployeeName,
                 x.Department,
                 x.Amount,

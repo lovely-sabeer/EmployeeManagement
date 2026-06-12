@@ -10,7 +10,7 @@ namespace EmployeeManagement.Service.Interfaces
         Task<CommonPaginatedResponse<EmployeeDto>> GetListAsync(string? search,string? department,int page,int pageSize);
         Task<bool> DeleteListAsync(List<Guid> ids);
         Task<byte[]> ExportAsync(string? department,string? search);
-        Task<Employee> GetByIdAsync(Guid id);
+        Task<EmployeeRes> GetByIdAsync(Guid id);
         Task<bool> UpdateAsync(Guid id, EmployeeManagementRm req);
     }
 }

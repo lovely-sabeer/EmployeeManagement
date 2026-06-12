@@ -4,6 +4,7 @@ using EmployeeManagement.RequestModal;
 using EmployeeManagement.ResponseModal;
 using EmployeeManagement.Service.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
 using RestAPI.Exceptions;
 using RestAPI.Service;
 
@@ -55,16 +56,28 @@ namespace EmployeeManagement.Service.Implementations
             return true;
         }
 
-        public async Task<Employee> GetByIdAsync(Guid id)
+        public async Task<EmployeeRes> GetByIdAsync(Guid id)
         {
             var employee = await _context.Employees
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted);
 
-            if (employee == null)
-                throw new AppExceptions("Employee not found.", 404);
-
-            return employee;
+            return employee == null
+                ? throw new AppExceptions("Employee not found.", 404)
+                : new EmployeeRes
+                {
+                    Id = employee.Id,
+                    FirstName = employee.FirstName,
+                    LastName = employee.LastName,
+                    EmployeeId = employee.EmployeeId,
+                    Email = employee.Email,
+                    Dob = employee.DateofBirth.ToString("yyyy-MM-dd"),
+                    Department = employee.Department.ToString(),
+                    Phone= employee.PhoneNumber,
+                    Gender = employee.Gender,
+                    Salary = employee.MonthlySalary,
+                    JoiningDate = employee.JoiningDate.ToString("yyyy-MM-dd"),
+                };
         }
 
         public async Task<bool> UpdateAsync(Guid id, EmployeeManagementRm req)

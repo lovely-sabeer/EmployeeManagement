@@ -31,28 +31,17 @@ namespace EmployeeManagement.RequestModal
         public string? Search{get; set;}
         public string? Department{get; set;}
         public string? Status{get; set;}
-        public AttendanceDateFilter? Date{get; set;}
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public AttendanceDateFilter? Date {get; set;}
         public int Page{get; set;}
         public int PageSize { get; set;}
     }
     public class SalaryReq
     {
         public List<Guid> EmployeeIds { get; set; } = [];
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public PaymentStatus Status { get; set; }
-        public DateTime PaymentDate { get; set; }
     }
-
-
-
-    public class EmployeeDto
-    {
-        public Guid Id { get; set; }
-        public string EmployeeId { get; set; } = string.Empty; 
-        public string Name { get; set; } = string.Empty;
-        public string Department { get; set; } = string.Empty;
-        public string Email { get; set; } 
-    }
-
 
     public class EmployeeManagementRm
     {
@@ -90,18 +79,12 @@ namespace EmployeeManagement.RequestModal
         public int ContinuousLeaveCount { get; set; }
     }
 
-    public class UpdateAttendanceRm
-    {
-        public string EmployeeId { get; set; } = string.Empty;
-        public AttendenceStatus Status { get; set; }
-        public DateTime Date { get; set; }
-    }
 
     public class BulkAttendanceReq
     {
         public List<Guid> EmployeeIds { get; set; } = [];
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public AttendenceStatus Status { get; set; }
-        public DateTime Date { get; set; }
     }
 
     public class MainDashboardDto

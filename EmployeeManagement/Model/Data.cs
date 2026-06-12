@@ -57,7 +57,8 @@
         public Department Department { get; set; }
         public decimal MonthlySalary { get; set; }
         public DateTime JoiningDate { get; set; }
-        public Attendence? Attendence { get; set; }
+        public ICollection<Attendence>? Attendences { get; set; }
+        public ICollection<Payment>? Payments { get; set; }
         
     }
 

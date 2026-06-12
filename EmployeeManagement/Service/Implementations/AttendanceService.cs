@@ -21,7 +21,7 @@ namespace EmployeeManagement.Service.Implementations
             var today = DateTime.UtcNow.Date;
             var yesterday = today.AddDays(-1);
 
-            var totalEmployees = await _context.Employees.CountAsync();
+            var totalEmployees = await _context.Employees.Where(i => !i.IsDeleted).CountAsync();
 
             var presentToday = await _context.Attendences
                 .CountAsync(a =>
@@ -65,10 +65,10 @@ namespace EmployeeManagement.Service.Implementations
             if (!string.IsNullOrWhiteSpace(req.Search))
                 query = query.Where(x => x.Employee.FirstName.Contains(req.Search) || x.Employee.LastName.Contains(req.Search) || x.Employee.EmployeeId.Contains(req.Search));
 
-            if (!string.IsNullOrWhiteSpace(req.Department) && req.Department != "All")
+            if (!string.IsNullOrWhiteSpace(req.Department) && req.Department != "all")
                 query = query.Where(x => x.Employee.Department.ToString() == req.Department);
 
-            if (!string.IsNullOrWhiteSpace(req.Status) && req.Status != "All")
+            if (!string.IsNullOrWhiteSpace(req.Status) && req.Status != "all")
                 query = query.Where(x => x.Status.ToString() == req.Status);
 
             if (req.Date == AttendanceDateFilter.Today)
@@ -104,8 +104,6 @@ namespace EmployeeManagement.Service.Implementations
 
         public async Task<bool> BulkAttendanceAsync(BulkAttendanceReq req)
         {
-            var targetDate = req.Date.Date;
-
             var employees = await _context.Employees
                 .Where(x => req.EmployeeIds.Contains(x.Id))
                 .ToListAsync();
@@ -113,8 +111,7 @@ namespace EmployeeManagement.Service.Implementations
             var employeeIds = employees.Select(x => x.Id).ToList();
 
             var attendances = await _context.Attendences
-                .Where(x => employeeIds.Contains(x.EmployeeId) &&
-                            x.AttendenceUpdateTime.Date == targetDate)
+                .Where(x => employeeIds.Contains(x.EmployeeId))
                 .ToListAsync();
 
             foreach (var employee in employees)
@@ -128,13 +125,13 @@ namespace EmployeeManagement.Service.Implementations
                     {
                         EmployeeId = employee.Id,
                         Status = req.Status,
-                        AttendenceUpdateTime = targetDate
+                        AttendenceUpdateTime = DateTime.Now
                     });
                 }
                 else
                 {
                     attendance.Status = req.Status;
-                    attendance.AttendenceUpdateTime = targetDate;
+                    attendance.AttendenceUpdateTime = DateTime.Now;
                 }
             }
             await _context.SaveChangesAsync();
